@@ -1,19 +1,20 @@
 require 'sinatra/base'
 require 'rack/test'
-require 'zip/zip'
+require 'zipruby'
+require 'fileutils'
 
 module Sinatra
 
 	# Publisher adds a `/static` method to the app, which generates a static version of all GET routes
 	# @TODO
+	# Make route configurable
 	# Use tmpdir, Support Zipping
 	# Remove dependency on rack::test
 	# Create gemfile, require dependencies
 	module Publisher
 
 		def self.registered(app)
-			app.set :static, false
-			app.set :out_dir, 'static'
+			app.set :out_dir, 'published'
 
 			mime_type :zip, 'application/zip'
 		
@@ -41,17 +42,22 @@ module Sinatra
 					File.open("#{out_dir}/#{route_name}.html", 'w+') {|f| f.write(html) }
 				end
 
-				Zip::ZipFile::open("#{options.out_dir}/app.zip", true) { 
-				   |zf| 
-				   Dir["#{options.out_dir}/*"].each { |f| zf.add(f, f) } 
-				}
-								
-				send_file "#{options.out_dir}/app.zip", :disposition => 'attachment', :filename => File.basename("app_#{DateTime.now.strftime('%Y-%m-%dT%H:%M:%S')}.zip")
+				if settings.static
+					Dir["#{settings.public}/**"].each { |path| FileUtils.cp_r(path, out_dir) }
+				end
 				
-				"Assets created in #{out_dir}."
+				Zip::Archive.open("#{options.out_dir}/app.zip", Zip::CREATE) do |zip|
+					Dir["#{options.out_dir}/**/*"].each do |path|
+						File.directory?(path) ? zip.add_dir(path) : zip.add_file(path, path)
+					end
+				end
+
+				send_file("#{options.out_dir}/app.zip", 
+							:disposition => 'attachment', 
+							:filename => File.basename("app_#{DateTime.now.strftime('%Y-%m-%dT%H:%M:%S')}.zip"))
 			end
 		end
-
+		
 	end
 	register Publisher
 end
