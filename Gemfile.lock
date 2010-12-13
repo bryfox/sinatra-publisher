@@ -12,5 +12,6 @@ PLATFORMS
   ruby
 
 DEPENDENCIES
+  rack (>= 1.1.0)
   sinatra (>= 1.1.0)
   zipruby

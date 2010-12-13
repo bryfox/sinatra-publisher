@@ -2,7 +2,9 @@ require 'rubygems'
 require 'sinatra'
 require "#{File.expand_path(File.dirname(__FILE__))}/../lib/sinatra/publisher"
 
-# set :static, false
+# Options provided by sinatra-publisher
+set :publisher_respond_with_zip, true
+set :publisher_dir, 'published'
 
 get '/' do
 	# puts env.inspect

@@ -7,23 +7,25 @@ module Sinatra
 
 	# Publisher adds a `/static` method to the app, which generates a static version of all GET routes
 	# @TODO
-	# Make route configurable
-	# Use tmpdir, Support Zipping
 	# Remove dependency on rack::test
 	# Create gemfile, require dependencies
 	module Publisher
 	  
+		# options:
+		# app.set :publisher_respond_with_zip, [true|false]
+		# app.set :publisher_dir, 'published'
 		def self.registered(app)
-			app.set :out_dir, 'published'
-
 			mime_type :zip, 'application/zip'
-		
+
 			app.get '/static' do
 				# app -> class
 				# self -> instance
-				out_dir ||= options.out_dir ? "#{Dir.pwd}/#{options.out_dir}" : Dir.tmpdir
+				out_dir = defined?(options.publisher_dir) ? "#{Dir.pwd}/#{options.publisher_dir}" : Dir.tmpdir
+        zip_name = defined?(options.publisher_dir) ? "published.zip" : "#{publisher_dir.gsub(/[\/\\:]/, '_')}.zip"
+        out_zip = "#{out_dir}/../#{zip_name}"
 				browser = Rack::Test::Session.new(Rack::MockSession.new(Sinatra::Application))
 
+				File.delete(out_zip) if File.exists? out_zip
 				FileUtils.rm_r(out_dir) if File.directory? out_dir
 				FileUtils.mkdir_p(out_dir)
 
@@ -37,36 +39,35 @@ module Sinatra
 					browser.get route_name
 					html = browser.last_response.body
 
-          # puts route_name
-
 					if route_name.empty?
-					  route_name = 'index'
-            output_path = "#{out_dir}/index.html"
-          else
-            FileUtils::mkdir_p("#{out_dir}#{route_name}")
-            output_path = "#{out_dir}#{route_name}/index.html"
-          end
+						route_name = 'index'
+						output_path = "#{out_dir}/index.html"
+					else
+						FileUtils::mkdir_p("#{out_dir}#{route_name}")
+						output_path = "#{out_dir}#{route_name}/index.html"
+					end
 
-					# FIXME: permissions on tmpdir
 					File.open(output_path, 'w+') {|f| f.write(html) }
 				end
 
 				if settings.static
 					Dir["#{settings.public}/**"].each { |path| FileUtils.cp_r(path, out_dir) }
 				end
-				
-				Zip::Archive.open("#{options.out_dir}/app.zip", Zip::CREATE) do |zip|
-					Dir["#{options.out_dir}/**/*"].each do |path|
+
+				Zip::Archive.open(out_zip, Zip::CREATE) do |zip|
+					Dir["#{out_dir}/**/*"].each do |path|
 						File.directory?(path) ? zip.add_dir(path) : zip.add_file(path, path)
 					end
 				end
 				
-        # send_file("#{options.out_dir}/app.zip", 
-        #       :disposition => 'attachment', 
-        #       :filename => File.basename("app_#{DateTime.now.strftime('%Y-%m-%dT%H:%M:%S')}.zip"))
+				options.publisher_respond_with_zip ?
+					send_file("#{out_zip}", 
+						:disposition => 'attachment', 
+						:filename => File.basename("app_#{DateTime.now.strftime('%Y-%m-%dT%H:%M:%S')}.zip")) :
+					"Files created in #{out_dir}. Zip: #{zip_name}"
 			end
 		end
-		
+
 	end
 	register Publisher
 end
