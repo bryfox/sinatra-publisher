@@ -12,7 +12,7 @@ module Sinatra
 	# Remove dependency on rack::test
 	# Create gemfile, require dependencies
 	module Publisher
-
+	  
 		def self.registered(app)
 			app.set :out_dir, 'published'
 
@@ -37,9 +37,18 @@ module Sinatra
 					browser.get route_name
 					html = browser.last_response.body
 
-					route_name = 'index' if route_name.empty?
+          # puts route_name
+
+					if route_name.empty?
+					  route_name = 'index'
+            output_path = "#{out_dir}/index.html"
+          else
+            FileUtils::mkdir_p("#{out_dir}#{route_name}")
+            output_path = "#{out_dir}#{route_name}/index.html"
+          end
+
 					# FIXME: permissions on tmpdir
-					File.open("#{out_dir}/#{route_name}.html", 'w+') {|f| f.write(html) }
+					File.open(output_path, 'w+') {|f| f.write(html) }
 				end
 
 				if settings.static
@@ -51,10 +60,10 @@ module Sinatra
 						File.directory?(path) ? zip.add_dir(path) : zip.add_file(path, path)
 					end
 				end
-
-				send_file("#{options.out_dir}/app.zip", 
-							:disposition => 'attachment', 
-							:filename => File.basename("app_#{DateTime.now.strftime('%Y-%m-%dT%H:%M:%S')}.zip"))
+				
+        # send_file("#{options.out_dir}/app.zip", 
+        #       :disposition => 'attachment', 
+        #       :filename => File.basename("app_#{DateTime.now.strftime('%Y-%m-%dT%H:%M:%S')}.zip"))
 			end
 		end
 		
