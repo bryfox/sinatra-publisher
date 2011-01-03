@@ -10,7 +10,8 @@ module Sinatra
 	# Remove dependency on rack::test
 	# Create gemfile, require dependencies
 	module Publisher
-	  
+		VERSION = "0.1.0"
+	
 		# options:
 		# app.set :publisher_respond_with_zip, [true|false]
 		# app.set :publisher_dir, 'published'
@@ -21,8 +22,8 @@ module Sinatra
 				# app -> class
 				# self -> instance
 				out_dir = defined?(options.publisher_dir) ? "#{Dir.pwd}/#{options.publisher_dir}" : Dir.tmpdir
-        zip_name = defined?(options.publisher_dir) ? "published.zip" : "#{publisher_dir.gsub(/[\/\\:]/, '_')}.zip"
-        out_zip = "#{out_dir}/../#{zip_name}"
+				zip_name = defined?(options.publisher_dir) ? "published.zip" : "#{publisher_dir.gsub(/[\/\\:]/, '_')}.zip"
+				out_zip = "#{out_dir}/../#{zip_name}"
 				browser = Rack::Test::Session.new(Rack::MockSession.new(Sinatra::Application))
 
 				File.delete(out_zip) if File.exists? out_zip
