@@ -19,6 +19,9 @@ get '/about-us/bios' do
 	"Nested directories should work."
 end
 
+# Single-param routes are supported.
+# Pass possible param values using define_publish_options_for
 get '/about-us/bios/:name' do
 	"The bio for #{params[:name]}."
 end
+define_publish_options_for('/about-us/bios/:name', %w{foo bar baz})
