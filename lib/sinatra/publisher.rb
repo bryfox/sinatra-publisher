@@ -10,7 +10,7 @@ module Sinatra
 	# Remove dependency on rack::test
 	# Create gemfile, require dependencies
 	module Publisher
-		VERSION = "0.1.2"
+		VERSION = "0.1.3"
 	
 		# options:
 		# app.set :publisher_respond_with_zip, [true|false]
@@ -39,7 +39,14 @@ module Sinatra
 				app.routes['GET'].each do | route |
 					# pattern, keys, conditions, block
 					# see base.rb, 477
-					route_name_match = route[0].to_s.match(/\/[\w-]+/)
+puts ":#{route[0].to_s.gsub(/\(\[.+\]\+\)/, ':::PARAM:::')}"
+					route_name_match = 
+						route[0].                            # Route pattern
+						to_s.
+						gsub(/\(\[.+\]\+\)/, ':::PARAM:::'). # Placeholder for splats & params
+						gsub(/\\\//, '/').                   # remove escaped slashes
+						match(/\/[:\/\w-]+/)                  # match the static path
+puts ">>#{route_name_match.inspect}"
 					route_name = route_name_match ? route_name_match[0] : ''
 					next if route_name == '/static'
 

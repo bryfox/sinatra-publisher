@@ -14,3 +14,11 @@ end
 get '/about-us' do
 	erb :about
 end
+
+get '/about-us/bios' do
+	"Nested directories should work."
+end
+
+get '/about-us/bios/:name' do
+	"The bio for #{params[:name]}."
+end
