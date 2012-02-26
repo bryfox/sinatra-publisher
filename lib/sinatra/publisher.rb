@@ -62,7 +62,6 @@ module Sinatra
         # Now render each path
         paths.each do | path |
           browser.get path
-          puts browser.last_response.inspect
           next unless browser.last_response.ok?
           html = browser.last_response.body
           if path.empty?
@@ -72,7 +71,6 @@ module Sinatra
             FileUtils::mkdir_p("#{out_dir}#{path}")
             output_path = "#{out_dir}#{path}/index.html"
           end
-puts output_path
           File.open(output_path, 'w+') {|f| f.write(html) }
         end
 
