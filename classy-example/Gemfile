@@ -1,0 +1,6 @@
+source :rubygems
+
+gem 'thin'
+gem "rack", ">= 1.1.0"
+gem "sinatra", ">= 1.1.0"
+gem "sinatra-publisher", ">= 0.2.1", :require => 'sinatra/publisher', :path => File.join(File.dirname(__FILE__), '..')

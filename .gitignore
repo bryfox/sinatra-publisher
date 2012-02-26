@@ -2,3 +2,4 @@
 example/published*
 static/
 *.gem
+Gemfile.lock
