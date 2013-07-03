@@ -97,14 +97,10 @@ module Sinatra
         end
 
         if settings.static
-          puts "settings.static"
           Dir["#{settings.public_folder}/**"].each { |path| FileUtils.cp_r(path, out_dir) }
         end
 
-        puts "ok"
-
         if defined?(settings.publisher_create_zip) && settings.publisher_create_zip
-          puts "zip"
           Zip::Archive.open(out_zip, Zip::CREATE) do |zip|
             Dir["#{out_dir}/**/*"].each do |path|
               File.directory?(path) ? zip.add_dir(path) : zip.add_file(path, path)
@@ -112,8 +108,6 @@ module Sinatra
           end
         end
         
-        puts "ok"
-
         if defined?(settings.publisher_respond_with_zip) && settings.publisher_respond_with_zip
           send_file("#{out_zip}",
             :disposition => 'attachment',
