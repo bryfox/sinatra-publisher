@@ -101,9 +101,11 @@ module Sinatra
         end
 
         if defined?(settings.publisher_create_zip) && settings.publisher_create_zip
-          Zip::Archive.open(out_zip, Zip::CREATE) do |zip|
-            Dir["#{out_dir}/**/*"].each do |path|
-              File.directory?(path) ? zip.add_dir(path) : zip.add_file(path, path)
+          Dir.chdir(out_dir) do
+            Zip::Archive.open(out_zip, Zip::CREATE) do |zip|
+              Dir["**/*"].each do |path|
+                File.directory?(path) ? zip.add_dir(path) : zip.add_file(path, path)
+              end
             end
           end
         end
