@@ -31,6 +31,7 @@ module Sinatra
     # options:
     # app.set :publisher_respond_with_zip, [true|false]
     # app.set :publisher_dir, 'published'
+    # app.set :publisher_zip_name, 'published.zip'
     def self.registered(app)
       mime_type :zip, 'application/zip'
       @@publisher_options = {}
@@ -40,12 +41,11 @@ module Sinatra
         # self -> instance
         if defined?(settings.publisher_dir)
           out_dir = settings.publisher_dir.start_with?('/') ? settings.publisher_dir : "#{Dir.pwd}/#{settings.publisher_dir}"
-          zip_name = "published.zip"
         else
           out_dir = Dir.tmpdir
-          zip_name = "#{settings.publisher_dir.gsub(/[\/\\:]/, '_')}.zip"
         end
 
+        zip_name = defined?(settings.publisher_zip_name) ? settings.publisher_zip_name : "published.zip"
         out_zip = File.join(out_dir, '..', zip_name)
         browser = Rack::Test::Session.new(Rack::MockSession.new(app))
         paths = []
