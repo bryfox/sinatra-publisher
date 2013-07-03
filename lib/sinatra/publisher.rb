@@ -114,11 +114,13 @@ module Sinatra
         
         puts "ok"
 
-        settings.publisher_respond_with_zip ?
-          send_file("#{out_zip}", 
-            :disposition => 'attachment', 
-            :filename => File.basename("app_#{DateTime.now.strftime('%Y-%m-%dT%H:%M:%S')}.zip")) :
-          "Files created in #{out_dir}."  
+        if defined?(settings.publisher_respond_with_zip) && settings.publisher_respond_with_zip
+          send_file("#{out_zip}",
+            :disposition => 'attachment',
+            :filename => File.basename("app_#{DateTime.now.strftime('%Y-%m-%dT%H:%M:%S')}.zip"))
+        else
+          "Files created in #{out_dir}."
+        end
       end
     end
 
