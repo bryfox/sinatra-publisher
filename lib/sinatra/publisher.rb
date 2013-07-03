@@ -3,6 +3,18 @@ require 'rack/test'
 require 'zipruby'
 require 'fileutils'
 
+# FIXME should only kill cache busting when generating static version
+module Sinatra
+  module AssetPack
+    module BusterHelpers
+      extend self
+      def cache_buster_hash(*files)
+        nil
+      end
+    end
+  end
+end
+
 module Sinatra
 
   # Publisher adds a `/static` method to the app, which generates a static version of all GET routes
@@ -58,13 +70,23 @@ module Sinatra
           param_values = @@publisher_options[route[0].to_s.to_sym]
           paths.concat((param_values || ['']).collect {|param| route_name.sub(param_placeholder, param)})
         end
-        
+
+        # sinatra-assetpack support
+        if app.assets.kind_of? Sinatra::AssetPack::Options
+          app.assets.packages.each_pair do | _, package |
+            paths.concat package.paths_and_files.keys
+          end
+        end
+
         # Now render each path
         paths.each do | path |
           browser.get path
           next unless browser.last_response.ok?
           html = browser.last_response.body
-          if path.empty?
+          if path =~ /\./
+            output_path = "#{out_dir}#{path}"
+            FileUtils::mkdir_p(File.dirname output_path)
+          elsif path.empty?
             path = 'index'
             output_path = "#{out_dir}/index.html"
           else
@@ -75,10 +97,14 @@ module Sinatra
         end
 
         if settings.static
+          puts "settings.static"
           Dir["#{settings.public_folder}/**"].each { |path| FileUtils.cp_r(path, out_dir) }
         end
 
+        puts "ok"
+
         if defined?(settings.publisher_create_zip) && settings.publisher_create_zip
+          puts "zip"
           Zip::Archive.open(out_zip, Zip::CREATE) do |zip|
             Dir["#{out_dir}/**/*"].each do |path|
               File.directory?(path) ? zip.add_dir(path) : zip.add_file(path, path)
@@ -86,11 +112,13 @@ module Sinatra
           end
         end
         
+        puts "ok"
+
         settings.publisher_respond_with_zip ?
           send_file("#{out_zip}", 
             :disposition => 'attachment', 
             :filename => File.basename("app_#{DateTime.now.strftime('%Y-%m-%dT%H:%M:%S')}.zip")) :
-          "Files created in #{out_dir}."
+          "Files created in #{out_dir}."  
       end
     end
 

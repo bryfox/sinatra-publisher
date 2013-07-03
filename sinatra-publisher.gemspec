@@ -1,6 +1,6 @@
 Gem::Specification.new do |s|
   s.name        = "sinatra-publisher"
-  s.version     = "0.3.0"
+  s.version     = "0.4.0rc1"
   s.authors     = "Bryan Fox"
   s.email       = "bryan@bryfox.com"
   s.homepage    = "http://github.com/bryfox/sinatra-publisher"
